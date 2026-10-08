@@ -1,0 +1,51 @@
+services:
+ 
+  mysql:
+    image: mysql:8.0
+    container_name: healthpulse-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: healthpulse_root
+      MYSQL_DATABASE: healthpulse_sample
+      MYSQL_USER: healthpulse_reader
+      MYSQL_PASSWORD: healthpulse_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - healthpulse
+ 
+  backend:
+    build:
+      context: ./backend
+    container_name: healthpulse-backend
+    restart: unless-stopped
+    environment:
+      DB_USER: healthpulse_reader
+      DB_PASSWORD: healthpulse_password
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: healthpulse_sample
+    depends_on:
+      - mysql
+    ports:
+      - "8001:8001"
+    networks:
+      - healthpulse
+ 
+  frontend:
+    build:
+      context: ./frontend
+    container_name: healthpulse-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - healthpulse
+ 
+networks:
+  healthpulse:
+ 
+volumes:
+  mysql_data:
